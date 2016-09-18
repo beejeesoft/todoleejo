@@ -27,12 +27,13 @@ var config = require('./config');
 // Connect to mongodb according to config.js
 var mongoose = require('mongoose');
 
-mongoose.connect(config.getMongoConnection());
+var mongoUrl = config.getMongoConnection();
+mongoose.connect(mongoUrl);
 var db = mongoose.connection;
-db.on('error', console.error.bind(console, 'connection error: ' + db.url));
+db.on('error', console.error.bind(console, 'connection error: ' + mongoUrl));
 db.once('open', function () {
   // we're connected!
-  console.log("Connected correctly to database server: " + db.url);
+  console.log("Connected correctly to database server: " + mongoUrl);
 });
 
 
