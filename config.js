@@ -5,7 +5,7 @@
 var local_mongo_conn_str = 'mongodb://localhost:27017/todoleejo';
 
 var cfenv = require('cfenv');
-
+exports.secretKey = '12345-64579-09123-54356'
 exports.getMongoConnection = function (req, res, next) {
 
     var mongo = process.env.VCAP_SERVICES;

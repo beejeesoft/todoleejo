@@ -6,9 +6,15 @@
     "start": "node app.js"
   },
   "dependencies": {
+    "body-parser": "^1.15.2",
     "cfenv": "1.0.x",
+    "cookie-parser": "^1.4.3",
     "express": "4.13.x",
-    "mongoose": "^4.6.0"
+    "jsonwebtoken": "^7.1.9",
+    "mongoose": "^4.6.0",
+    "passport": "^0.3.2",
+    "passport-local": "^1.0.0",
+    "passport-local-mongoose": "^4.0.0"
   },
   "repository": {},
   "engines": {
