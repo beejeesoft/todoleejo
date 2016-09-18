@@ -46,8 +46,6 @@ passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
-
-
 var routes = require('./routes/index');
 var users = require('./routes/users');
 
