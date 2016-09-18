@@ -29,10 +29,10 @@ var mongoose = require('mongoose');
 
 mongoose.connect(config.getMongoConnection());
 var db = mongoose.connection;
-db.on('error', console.error.bind(console, 'connection error:'));
+db.on('error', console.error.bind(console, 'connection error: ' + db.url));
 db.once('open', function () {
   // we're connected!
-  console.log("Connected correctly to database server");
+  console.log("Connected correctly to database server: " + db.url);
 });
 
 

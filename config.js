@@ -2,7 +2,7 @@
 // cfenv provides access to your Cloud Foundry environment
 // for more info, see: https://www.npmjs.com/package/cfenv
 
-var local_mongo_conn_str = 'mongodb://localhost:27017/conFusion';
+var local_mongo_conn_str = 'mongodb://localhost:27017/todoleejo';
 
 var cfenv = require('cfenv');
 
@@ -16,9 +16,10 @@ exports.getMongoConnection = function (req, res, next) {
         if (env['mongodb']) {
             mongo = env['mongodb'][0]['credentials'];
             if (mongo.url) {
+                console.log("Found mongodb: " + mongo.url);
                 return mongo.url;
             } else {
-                console.log("No mongo found");
+                console.log("No mongo Url specified. Check service on bluemix");
             }
         }
     }
