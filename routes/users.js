@@ -16,16 +16,17 @@ router.get('/', function (req, res, next) {
 
 
 router.post('/register', function (req, res) {
-  console.log('HI in register');
   User.register(new User({
     username: req.body.username
   }),
     req.body.password,
     function (err, user) {
       if (err) {
-        return res.status(500).json({
-          err: err
-        });
+        //console.log(err);
+        if (err.name !== null && err.name === 'UserExistsError')
+          return res.status(403).json({ err: err });
+        else
+          return res.status(500).json({ err: err });
       }
 
       // Add a default standard container
@@ -37,6 +38,7 @@ router.post('/register', function (req, res) {
       },
         function (err, todo) {
           if (err) {
+            console.log(err);
             return res.status(500).json({ err: err });
           }
           console.log('StandardContainer created: ' + todo);

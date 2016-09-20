@@ -8,8 +8,11 @@
   "dependencies": {
     "body-parser": "^1.15.2",
     "cfenv": "1.0.x",
+    "clean-mongo": "^1.0.2",
     "cookie-parser": "^1.4.3",
     "express": "4.13.x",
+    "frisby": "^0.8.5",
+    "jasmine-node": "^1.14.5",
     "jsonwebtoken": "^7.1.9",
     "mongoose": "^4.6.0",
     "passport": "^0.3.2",
