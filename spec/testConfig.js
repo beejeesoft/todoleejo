@@ -1,4 +1,5 @@
 var BASE_URL = 'http://localhost:6001/';
+//var BASE_URL = 'http://todoleejo.eu-gb.mybluemix.net/';
 var REGISTER_URL = BASE_URL + 'users/register';
 
 var LOGIN_URL = BASE_URL + 'users/login';

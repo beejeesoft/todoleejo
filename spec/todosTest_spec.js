@@ -31,9 +31,7 @@ describe('Create a todo ', function() {
         })
         .expectStatus(200)
         .afterJSON(function(jsonLogin) {
-          console.log('CreateURL:' + CREATE_URL);
-          console.log("token: " + jsonLogin.token);
-
+          
           frisby.globalSetup({ // globalSetup is for ALL requests
             request: {
               headers: {
@@ -50,7 +48,7 @@ describe('Create a todo ', function() {
             })
             .expectStatus(200)
             .afterJSON(function(todo) {
-              console.log(todo);
+              //console.log(todo);
               expect(todo).not.toBe(null);
               expect(todo.isContainer).toBe(false);
               expect(todo.parents.length).toBe(1);
@@ -62,7 +60,8 @@ describe('Create a todo ', function() {
           .post(CREATE_URL, {'description':'Bad Idea'})
           .expectStatus(422)
           .afterJSON(function(json){
-            console.log(json);
+            expect(json.err.name).toBe('ValidationError');
+            //console.log(json);
           })
           .toss();
 
@@ -74,20 +73,3 @@ describe('Create a todo ', function() {
     .toss();
 });
 
-/*   
-            .afterJSON(function(json) {
-              expect(json.status).toBe('Login successful!');
-              expect(json.success).toBe(true);
-              expect(json.token).toBeDefined();
-              expect(json.token).not.toBe(null);
-              expect(json.token.length).toBeGreaterThan(0);
-            })
-            .toss();
-        })
-        .toss();
-    })
-    .toss();
-
-});
-
-*/
