@@ -6,8 +6,6 @@ var parentSchema = new Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'ToDo'
   }
-}, {
-  timestamps: true
 });
 
 var userSchema = new Schema({
@@ -15,8 +13,6 @@ var userSchema = new Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   }
-}, {
-  timestamps: true
 });
 
 
@@ -46,6 +42,8 @@ var ToDo = new Schema({
   
   parents: [parentSchema]
 
+}, {
+  timestamps: true
 });
 
 

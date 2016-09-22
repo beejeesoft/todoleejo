@@ -1,61 +1,106 @@
 var frisby = require('frisby');
-var cleanMongo = require('clean-mongo');
-var mongoose = require('mongoose');
-var config = require('../config');
-var User = require('../models/user');
-
-var TEST_USER = 'testregister';
-var TEST_PASSW = 'abcd';
-var BASE_URL = 'http://localhost:6001/';
-var REGISTER_URL = BASE_URL + 'users/register';
-var LOGIN_URL = BASE_URL + 'users/login';
-
-mongoose.connect('mongodb://localhost:27017/todoleejo');
-var db = mongoose.connection;
-db.on('error', console.error.bind(console, 'connection error'));
-db.once('open', function () {
-        console.log("OPEN");
-        User.remove({ 'username': TEST_USER }, function (err, user) { });
-        db.close();
-
-});
+var gc = require('./testConfig');
 
 
-describe('Register and Login ', function () {
+var TEST_USER = gc.TEST_USER_REGISTER;
+var TEST_USER_LOGIN = gc.TEST_USER_LOGIN;
+var TEST_PASSW = gc.TEST_PASSW;
 
-        frisby.create('Register a user')
-                .post(REGISTER_URL, {
-                        'username': TEST_USER,
-                        'password': TEST_PASSW
-                })
-                .expectStatus(200)
-                .after(function (err, res, body) {
-                        frisby.create('Register the same user twice should fail')
-                                .post(REGISTER_URL, {
-                                        'username': TEST_USER,
-                                        'password': TEST_PASSW
-                                })
-                                .expectStatus(403)
-                                .after(function (err, res, body) {
-                                        frisby.create('After register a login is possible')
-                                                .post(LOGIN_URL, {
-                                                        'username': TEST_USER,
-                                                        'password': TEST_PASSW
-                                                })
-                                                .expectStatus(200)
-                                                .afterJSON(function (json) {
-                                                        expect(json.status).toBe('Login successful!');
-                                                        expect(json.success).toBe(true);
-                                                        expect(json.token).toBeDefined();
-                                                        expect(json.token).not.toBe(null);
-                                                        expect(json.token.length).toBeGreaterThan(0);
-                                                })
-                                                .toss();
-                                })
-                                .toss();
-                })
-                .toss();
+var REGISTER_URL = gc.REGISTER_URL;
+var LOGIN_URL = gc.LOGIN_URL;
+var LOGOUT_URL = gc.LOGOUT_URL;
+
+
+describe('Register and Login ', function() {
+
+
+  frisby.create('Register a user')
+    .post(REGISTER_URL, {
+      'username': TEST_USER,
+      'password': TEST_PASSW
+    })
+    .expectStatus(200)
+    .after(function(err, res, body) {
+      frisby.create('Register the same user twice should fail')
+        .post(REGISTER_URL, {
+          'username': TEST_USER,
+          'password': TEST_PASSW
+        })
+        .expectStatus(403)
+        .after(function(err, res, body) {
+          frisby.create('After register a login is possible')
+            .post(LOGIN_URL, {
+              'username': TEST_USER,
+              'password': TEST_PASSW
+            })
+            .expectStatus(200)
+            .afterJSON(function(json) {
+              expect(json.status).toBe('Login successful!');
+              expect(json.success).toBe(true);
+              expect(json.token).toBeDefined();
+              expect(json.token).not.toBe(null);
+              expect(json.token.length).toBeGreaterThan(0);
+            })
+            .toss();
+        })
+        .toss();
+    })
+    .toss();
 
 });
 
 
+describe('Login tests', function() {
+
+      frisby.create('Register as prepare the tests')
+        .post(REGISTER_URL, {
+          'username': TEST_USER_LOGIN,
+          'password': TEST_PASSW
+        })
+        .expectStatus(200)
+        .after(function() {
+   
+          frisby.create('Login without passwd').post(LOGIN_URL, {
+              'username': TEST_USER_LOGIN
+            })
+            .expectStatus(401)
+            .toss();
+
+          frisby.create('Login without user and password')
+            .post(LOGIN_URL, {})
+            .expectStatus(401)
+            .toss();
+
+          frisby.create('Login with wrong Passwd')
+            .post(LOGIN_URL, {
+              'username': TEST_USER_LOGIN,
+              'password': TEST_PASSW + 'x'
+            })
+            .expectStatus(401)
+            .toss();
+
+          frisby.create('Login without user and wrong Passwd')
+            .post(LOGIN_URL, {
+              'username': '',
+              'password': TEST_PASSW + 'x'
+            })
+            .expectStatus(401)
+            .toss();
+
+          frisby.create('Login with correct password')
+            .post(LOGIN_URL, {
+              'username': TEST_USER_LOGIN,
+              'password': TEST_PASSW
+            })
+            .expectStatus(200)
+            .toss();
+        })
+        .toss();
+});
+
+describe('Logout test', function(){
+        frisby.create('Check if logout sends 200')
+        .get(LOGOUT_URL)
+        .expectStatus(200)
+        .toss();
+});
