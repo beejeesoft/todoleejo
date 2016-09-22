@@ -60,11 +60,7 @@ The task is assigned to the container represented by the given container id.
 Omitting the container id let ToDoLeeJo creating the task in the standard container.
 */
 .post(function(req, res, next) {
-  console.log("In ToDo post");
-
   var containerId = getContainerIdOrDefault(req);
-  console.log('user._id: ' + req.decoded._id);
-  console.log('parents: ' + containerId);
   ToDo.create({
       'users': [{
         userId: req.decoded._id
@@ -94,6 +90,54 @@ Omitting the container id let ToDoLeeJo creating the task in the standard contai
 
       res.status(200).json(todo);
     });
+})
+
+/*
+  Deletes an existing todo according the id given in the body of the request.
+  If the id does not exists or the todo does not belong to the logged in user
+  a 404 is thrown. If the id belongs to a container 
+  a 400 return code is send. For containers please use the container endpoints
+  A 400 return code is also send for requests omitting the todoId in the body.
+  The deleted todo is send back with a status = 'deleted'
+*/
+.delete(function(req, res, next) {
+  ToDo.find({
+    users: {
+      $elemMatch: {
+        userId: req.decoded._id
+      }
+    },
+    _id: req.body.todoId
+  }, function(err, todoDeleted) {
+    if (err) {
+      return res.status(404).json({
+        err: err
+      });
+    }
+
+    // Wie found a todo with user==logged in user and the given _id. 
+    // and removed it already
+    if (todoDeleted.isContainer === true) {
+      return res.status(400).
+      json({
+        'code': 400,
+        'messsage': 'Containers can not be deleted with this endpoint'
+      });
+    }
+
+    // Found a non container todo that matches the user and the given id
+    ToDo.findOneAndRemove({
+      '_id': req.body.todoId
+    }, function(err, removed) {
+      if (err) return res.status(500).json({
+        err: err
+      });
+
+      removed.status = 'deleted';
+      return res.status(200).json(removed);
+    });
+
+  });
 });
 
 module.exports = router;

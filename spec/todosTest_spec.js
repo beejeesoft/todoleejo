@@ -31,7 +31,7 @@ describe('Create a todo ', function() {
         })
         .expectStatus(200)
         .afterJSON(function(jsonLogin) {
-          
+
           frisby.globalSetup({ // globalSetup is for ALL requests
             request: {
               headers: {
@@ -57,19 +57,37 @@ describe('Create a todo ', function() {
             .toss();
 
           frisby.create('Createing new entry without summary throws a ValidationError')
-          .post(CREATE_URL, {'description':'Bad Idea'})
-          .expectStatus(422)
-          .afterJSON(function(json){
-            expect(json.err.name).toBe('ValidationError');
-            //console.log(json);
-          })
-          .toss();
+            .post(CREATE_URL, {
+              'description': 'Bad Idea'
+            })
+            .expectStatus(422)
+            .afterJSON(function(json) {
+              expect(json.err.name).toBe('ValidationError');
+              //console.log(json);
+            })
+            .toss();
 
 
+          frisby.create('Creating and Delete entry')
+            .post(CREATE_URL, {
+              'summary': 'To Delete',
+              'description': 'a discription'
+            })
+            .expectStatus(200)
+            .afterJSON(function(todo) {
+              frisby.create('Delete the todo')
+              .delete(CREATE_URL, {todoId:todo._id})
+              .expectStatus(200)
+              .afterJSON(function(tododeleted){
+                console.log(tododeleted);
+                expect(tododeleted).not.toBe(null);
+                expect(tododeleted).toBe(json._id);
 
+              }).toss();
+            })
+            .toss();
         })
         .toss();
     })
     .toss();
 });
-
