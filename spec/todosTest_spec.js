@@ -16,7 +16,7 @@ var LOGOUT_URL = gc.LOGOUT_URL;
 describe('Create a todo ', function() {
 
 
-  frisby.create('Todo Tests register a user')
+  frisby.create('Todo Tests first register a user for all')
     .post(REGISTER_URL, {
       'username': TEST_USER,
       'password': TEST_PASSW
@@ -24,7 +24,7 @@ describe('Create a todo ', function() {
     .expectStatus(200)
     .after(function(err, res, body) {
 
-      frisby.create('Todo Tests Login')
+      frisby.create('Todo Tests Login the user for all tests')
         .post(LOGIN_URL, {
           'username': TEST_USER,
           'password': TEST_PASSW
@@ -32,7 +32,8 @@ describe('Create a todo ', function() {
         .expectStatus(200)
         .afterJSON(function(jsonLogin) {
 
-          frisby.globalSetup({ // globalSetup is for ALL requests
+          // globalSetup is for ALL following requests
+          frisby.globalSetup({
             request: {
               headers: {
                 'x-access-token': jsonLogin.token
@@ -63,7 +64,6 @@ describe('Create a todo ', function() {
             .expectStatus(422)
             .afterJSON(function(json) {
               expect(json.err.name).toBe('ValidationError');
-              //console.log(json);
             })
             .toss();
 
@@ -75,19 +75,107 @@ describe('Create a todo ', function() {
             })
             .expectStatus(200)
             .afterJSON(function(todo) {
-              frisby.create('Delete the todo')
-              .delete(CREATE_URL, {todoId:todo._id})
-              .expectStatus(200)
-              .afterJSON(function(tododeleted){
-                console.log(tododeleted);
-                expect(tododeleted).not.toBe(null);
-                expect(tododeleted).toBe(json._id);
 
-              }).toss();
+              frisby.create('Delete with a non objectId 400')
+                .delete(CREATE_URL, {
+                  todoId: 'notObjectId123456678888'
+                })
+                .expectStatus(400)
+                .after(function() {
+
+
+                  frisby.create('Delete with a non existing objectId')
+                    .delete(CREATE_URL, {
+                      todoId: "57e4377987348e1cc98986f0"
+                    })
+                    .expectStatus(404)
+                    .after(function() {
+
+
+                      frisby.create('Delete the todo')
+                        .delete(CREATE_URL, {
+                          todoId: todo._id
+                        })
+                        .expectStatus(200)
+                        .afterJSON(function(tododeleted) {
+                          expect(tododeleted).not.toBe(null);
+                          expect(tododeleted._id).toBe(json._id);
+                          expect(tododeleted.state).toBe('deleted');
+                        }).toss();
+                    }).toss();
+                }).toss();
+            }).toss();
+
+
+          frisby.create('Transition forth and back')
+            .post(CREATE_URL, {
+              'summary': 'Transition test',
+
             })
-            .toss();
-        })
-        .toss();
-    })
-    .toss();
+            .expectStatus(200)
+            .afterJSON(function(todo) {
+              expect(todo.state).toBe('open');
+
+              frisby.create('Check Open right')
+                .put(CREATE_URL + '/transition', {
+                  todoId: todo._id,
+                  direction: 'right'
+                })
+                .expectStatus(200)
+                .afterJSON(function(todo) {
+                  expect(todo.state).toBe('inProgress');
+
+                  frisby.create('Check InProgress right')
+                    .put(CREATE_URL + '/transition', {
+                      todoId: todo._id,
+                      direction: 'right'
+                    })
+                    .expectStatus(200)
+                    .afterJSON(function(todo) {
+                      expect(todo.state).toBe('done');
+
+                      frisby.create('Check done right')
+                        .put(CREATE_URL + '/transition', {
+                          todoId: todo._id,
+                          direction: 'right'
+                        })
+                        .expectStatus(200)
+                        .afterJSON(function(todo) {
+                          expect(todo.state).toBe('done');
+
+                          frisby.create('Check done left')
+                            .put(CREATE_URL + '/transition', {
+                              todoId: todo._id,
+                              direction: 'left'
+                            })
+                            .expectStatus(200)
+                            .afterJSON(function(todo) {
+                              expect(todo.state).toBe('inProgress');
+
+                              frisby.create('Check inProgress left')
+                                .put(CREATE_URL + '/transition', {
+                                  todoId: todo._id,
+                                  direction: 'left'
+                                })
+                                .expectStatus(200)
+                                .afterJSON(function(todo) {
+                                  expect(todo.state).toBe('open');
+
+                                  frisby.create('Check open left')
+                                    .put(CREATE_URL + '/transition', {
+                                      todoId: todo._id,
+                                      direction: 'left'
+                                    })
+                                    .expectStatus(200)
+                                    .afterJSON(function(todo) {
+                                      expect(todo.state).toBe('deleted');
+                                    }).toss();
+                                }).toss();
+                            }).toss();
+                        }).toss();
+                    }).toss();
+                }).toss();
+            }).toss();
+        }).toss();
+    }).toss();
 });
