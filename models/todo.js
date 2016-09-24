@@ -24,22 +24,25 @@ var ToDo = new Schema({
 
   description: String,
 
-  state:{
+  state: {
     type: String,
     required: true,
     default: 'open',
     enum: ['open', 'inProgress', 'done', 'deleted']
   },
 
-  color: String,
-  
+  color: {
+    type: String,
+    default: 'black'
+  },
+
   isContainer: {
     type: Boolean,
     default: false
   },
 
-  users : [userSchema],
-  
+  users: [userSchema],
+
   parents: [parentSchema]
 
 }, {

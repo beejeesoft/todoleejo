@@ -33,7 +33,7 @@ router.post('/register', function(req, res) {
 
       // Add a default standard container
       ToDo.create({
-          'users': [user._id],
+          'users': [{userId:user._id}],
           'summary': 'Standard',
           'isContainer': 'true'
         },

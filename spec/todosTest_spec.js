@@ -54,6 +54,7 @@ describe('Create a todo ', function() {
               expect(todo.isContainer).toBe(false);
               expect(todo.parents.length).toBe(1);
               expect(todo.users.length).toBe(1);
+              expect(todo.color).toBe('black');
             })
             .toss();
 
@@ -106,6 +107,113 @@ describe('Create a todo ', function() {
                 }).toss();
             }).toss();
 
+
+
+          /*
+            Update test
+          */
+
+
+          frisby.create('Put values')
+            .post(CREATE_URL, {
+              'summary': 'Put Values Test'
+            })
+            .expectStatus(200)
+            .afterJSON(function(todo1) {
+              // Update values
+              todo1.description = 'Update Description';
+              todo1.color = 'orange';
+              todo1.summary = 'Update Summary';
+              todo1.parents = [];
+
+              frisby.create('Updated Todos are returned')
+                .put(CREATE_URL, todo1, {
+                  json: true
+                })
+                .expectStatus(200)
+                .afterJSON(function(todo2) {
+                  // returned todo should equal given one
+                  // The parent should be set back to default container
+                  expect(todo2.summary).toBe(todo1.summary);
+                  expect(todo2._id).toBe(todo1._id);
+                  expect(todo2.parents.length).toBe(1);
+                  expect(todo2.color).toBe('orange');
+                  expect(todo2.description).toBe('Update Description');
+
+                  // Now we have set the parent to a todo and assume
+                  // it will be resetted to the default container
+                  todo1.parents = [{
+                    parentId: todo2._id
+                  }];
+                  todo1.color = 'red';
+
+                  frisby.create('Wrong container type leads to default')
+                    .put(CREATE_URL, todo1, {
+                      json: true
+                    })
+                    .expectStatus(200)
+                    .afterJSON(function(todo3) {
+                      expect(todo3.summary).toBe(todo1.summary);
+                      expect(todo3._id).toBe(todo1._id);
+                      expect(todo3.parents.length).toBe(1);
+                      expect(todo3.parents[0].parentId).toBe(todo2.parents[0].parentId);
+                      expect(todo3.color).toBe('red');
+                      expect(todo3.description).toBe('Update Description');
+                      expect(todo3.users[0].userId).toBe(todo1.users[0].userId);
+
+                      // sending the same valid todo3 should do no harm
+                      frisby.create('Sending again is ok')
+                        .put(CREATE_URL, todo3, {
+                          json: true
+                        })
+                        .expectStatus(200)
+                        .afterJSON(function(todo4) {
+                          expect(todo4.summary).toBe(todo1.summary);
+                          expect(todo4._id).toBe(todo1._id);
+                          expect(todo4.parents.length).toBe(1);
+                          expect(todo4.parents[0].parentId).toBe(todo2.parents[0].parentId);
+                          expect(todo4.color).toBe('red');
+                          expect(todo4.description).toBe('Update Description');
+                          expect(todo4.users[0].userId).toBe(todo1.users[0].userId);
+
+                          // Now we add some non schema valid informations
+                          // and expect the server not to crash
+
+                          todo4._id = 'not a valid id';
+
+                          frisby.create('Wrong id leads to 400')
+                            .put(CREATE_URL, todo4, {
+                              json: true
+                            })
+                            .expectStatus(400)
+                            .after(function() {
+
+                              // we assume a provided state change will not be reflected
+                              var tmpState = todo3.state;
+                              todo3.state = 'deleted'
+                              frisby.create('State information will not be processed')
+                                .put(CREATE_URL, todo3, {
+                                  json: true
+                                })
+                                .expectStatus(200)
+                                .afterJSON(function(todo5) {
+                                  todo3.state=tmpState;
+                                  expect(JSON.stringify(todo3)).toBe(JSON.stringify(todo5));
+                                }).toss();
+                            })
+                            .toss();
+                        }).toss();
+                    }).toss();
+                }).toss();
+
+            })
+            .toss();
+
+
+
+          /*
+            checking transitions
+          */
 
           frisby.create('Transition forth and back')
             .post(CREATE_URL, {
