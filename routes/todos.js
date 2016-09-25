@@ -49,7 +49,6 @@ var findTodosForCurrentUser = function(query, callback) {
     }
   }, function(err, todos) {
     if (err) {
-      console.log(err);
       //An error can occur if the provided todoId is not an ObjectId.
       //So we return bad request
       if (err.name === 'CastError' && err.kind === 'ObjectId') {
@@ -59,7 +58,6 @@ var findTodosForCurrentUser = function(query, callback) {
       }
     } else if (isUndefined(todos) || todos.length === 0) {
       // could not found a todo for current user with provided _id
-      console.log("Could not found a match: ");
       callback({
         'message': 'No todo found with given _id: ',
         'query.id': query._id,
@@ -217,23 +215,46 @@ var haveSameParentIDs = function(parents1, parents2) {
 router.route('/')
   .all(Verify.verifyOrdinaryUser)
 
-.get(function(req, res, next) {
-  console.log("In ToDo get");
-  var searchId;
-  if (isDefinedBodyContainerId(req) === true)
-    searchId = req.param.containerId;
 
-  else
-    searchId = req.decoded.containerId;
+/**
+ * Getting todos for a specific container
+ * If not container id was given the defaultContainer for the user is used.
+ */
+
+.get(function(req, res, next) {
+
+  var searchId = getContainerIdOrDefault(req);
+
   ToDo.find({
-      'users': req.decoded._id,
-      'parents': searchId
-    })
-    //.populate('comments.postedBy')
-    .exec(function(err, todos) {
-      if (err) return next(err);
-      res.json(todos);
-    });
+    users: {
+      $elemMatch: {
+        userId: req.decoded._id
+      }
+    },
+    parents: {
+      $elemMatch: {
+        parentId: searchId
+      }
+    }
+  }, function(err, todos) {
+
+    var code = 200;
+    var result = todos;
+
+    if (err) {
+      result={err:err};
+      code = 500;
+      if (err.name === 'CastError' && err.kind === 'ObjectId') {
+        //An error can occur if the provided todoId is not an ObjectId.
+        //So we return bad request
+        code = 400;
+      } 
+    }
+
+    
+    return res.status(code).json(result);
+    
+  });
 })
 
 /*
@@ -262,7 +283,6 @@ For other updates like transitions or converting into an container use the speci
 
   findTodosForCurrentUser(query, function(err, code, todos) {
     if (err) {
-      console.log('An error has occured during put operation: ' + JSON.stringify(err));
       return res.status(code).json({
         err: err
       });
@@ -278,7 +298,6 @@ For other updates like transitions or converting into an container use the speci
     // c) check that the container associations are not empty (else use default container)
     prepareParentsForUpdate(req, todo, function(err, code, preparedTodo) {
       if (err) {
-        console.log("Error during prepare parents" + JSON.stringify(err));
         return res.status(code).json({
           err: err
         });
@@ -353,7 +372,6 @@ Omitting the container id let ToDoLeeJo creating the task in the standard contai
             err: err
           });
         } else {
-          console.log(err);
           return res.status(500).json({
             err: err
           });

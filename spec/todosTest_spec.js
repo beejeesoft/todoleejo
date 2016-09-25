@@ -13,7 +13,7 @@ var REGISTER_URL = gc.REGISTER_URL;
 var LOGIN_URL = gc.LOGIN_URL;
 var LOGOUT_URL = gc.LOGOUT_URL;
 
-describe('Create a todo ', function() {
+describe('ToDo TestSuite ', function() {
 
 
   frisby.create('Todo Tests first register a user for all')
@@ -41,6 +41,11 @@ describe('Create a todo ', function() {
             }
           });
 
+          /**
+           * Creating ToDos
+           */
+
+
           frisby.create('Creating new entry')
             .post(CREATE_URL, {
               'summary': 'A summary',
@@ -49,7 +54,6 @@ describe('Create a todo ', function() {
             })
             .expectStatus(200)
             .afterJSON(function(todo) {
-              //console.log(todo);
               expect(todo).not.toBe(null);
               expect(todo.isContainer).toBe(false);
               expect(todo.parents.length).toBe(1);
@@ -69,6 +73,42 @@ describe('Create a todo ', function() {
             .toss();
 
 
+          /**
+           * Getting existing todos with id
+           */
+          frisby.create('Getting created todos')
+            .post(CREATE_URL, {
+              'summary': 'Getting tests 1x34'
+            })
+            .expectStatus(200)
+            .afterJSON(function(todo) {
+
+              // We now get the list for the default container
+              // and assuming this todo is part of it
+              var expectedId = todo._id;
+              var expectedSummary = todo.summary;
+
+              frisby.create('just getting the default container')
+                .get(CREATE_URL)
+                .expectStatus(200)
+                .afterJSON(function(todos) {
+                  expect(todos.length > 0).toBe(true);
+
+                  expect(todos.find(
+                      function(elem) {
+                        return (elem._id === expectedId);
+                      })
+                    .summary).toBe(expectedSummary);
+                })
+                .toss();
+
+            })
+            .toss();
+
+          /**
+           * Delete and check some wrong input cases 
+           */
+
           frisby.create('Creating and Delete entry')
             .post(CREATE_URL, {
               'summary': 'To Delete',
@@ -77,7 +117,7 @@ describe('Create a todo ', function() {
             .expectStatus(200)
             .afterJSON(function(todo) {
 
-              frisby.create('Delete with a non objectId 400')
+              frisby.create('Delete with a non objectId returns 400')
                 .delete(CREATE_URL, {
                   todoId: 'notObjectId123456678888'
                 })
@@ -109,9 +149,9 @@ describe('Create a todo ', function() {
 
 
 
-          /*
-            Update test
-          */
+          /**
+           * Update a todo
+           */
 
 
           frisby.create('Put values')
@@ -120,7 +160,11 @@ describe('Create a todo ', function() {
             })
             .expectStatus(200)
             .afterJSON(function(todo1) {
-              // Update values
+
+              // After create the todo update it
+              // The empty parent array should be fixed to
+              // include the default container.
+
               todo1.description = 'Update Description';
               todo1.color = 'orange';
               todo1.summary = 'Update Summary';
@@ -132,16 +176,20 @@ describe('Create a todo ', function() {
                 })
                 .expectStatus(200)
                 .afterJSON(function(todo2) {
+
                   // returned todo should equal given one
-                  // The parent should be set back to default container
+                  // The parent should be set back to
+                  // default container
                   expect(todo2.summary).toBe(todo1.summary);
                   expect(todo2._id).toBe(todo1._id);
                   expect(todo2.parents.length).toBe(1);
                   expect(todo2.color).toBe('orange');
                   expect(todo2.description).toBe('Update Description');
 
-                  // Now we have set the parent to a todo and assume
-                  // it will be resetted to the default container
+                  // Now we have set the parent to a todo 
+                  // which is not allowed because it is not a container
+                  // and assume it will be resetted to the 
+                  // default container
                   todo1.parents = [{
                     parentId: todo2._id
                   }];
@@ -161,7 +209,8 @@ describe('Create a todo ', function() {
                       expect(todo3.description).toBe('Update Description');
                       expect(todo3.users[0].userId).toBe(todo1.users[0].userId);
 
-                      // sending the same valid todo3 should do no harm
+                      // Updateing the same valid todo3 
+                      // should do no harm
                       frisby.create('Sending again is ok')
                         .put(CREATE_URL, todo3, {
                           json: true
@@ -188,16 +237,18 @@ describe('Create a todo ', function() {
                             .expectStatus(400)
                             .after(function() {
 
-                              // we assume a provided state change will not be reflected
+                              // we assume a provided state change
+                              // will not be reflected (because it is
+                              // not a respected field for this operation)
                               var tmpState = todo3.state;
-                              todo3.state = 'deleted'
+                              todo3.state = 'deleted';
                               frisby.create('State information will not be processed')
                                 .put(CREATE_URL, todo3, {
                                   json: true
                                 })
                                 .expectStatus(200)
                                 .afterJSON(function(todo5) {
-                                  todo3.state=tmpState;
+                                  todo3.state = tmpState;
                                   expect(JSON.stringify(todo3)).toBe(JSON.stringify(todo5));
                                 }).toss();
                             })
@@ -211,9 +262,9 @@ describe('Create a todo ', function() {
 
 
 
-          /*
-            checking transitions
-          */
+          /**
+           * Checking transitions
+           */
 
           frisby.create('Transition forth and back')
             .post(CREATE_URL, {
