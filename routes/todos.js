@@ -16,10 +16,9 @@ var isUndefined = function(toCheck) {
 
 
 var isDefinedBodyContainerId = function(req) {
-  return (!isUndefined(req) &&
-    !isUndefined(req.body) &&
-    !isUndefined(req.body.containerId) &&
-    req.body.containerId.length > 0);
+  return (isUndefined(req)===false &&
+    isUndefined(req.body) === false &&
+    isUndefined(req.body.containerId === false));
 };
 
 /*
@@ -89,13 +88,12 @@ var copyParentIdsToQuery = function(req, parents) {
 /*
   copy only those todo._id s that are containers and are contained in requested list.
 */
-var copyOnlyValidParentsOrSetDefault = function(req, todoList, parents) {
+var copyOnlyContainers = function(req, todoList) {
   var newParents = [];
-  for (var id = 0; id < todoList.length; id++) {
-    if (todoList[id].isContainer &&
-      parents.indexOf(todoList[id]._id) > -1) {
-      newParents.push(todoList[id]._id);
-    }
+
+  for(var i = 0; i < todoList.length; i++){
+    if(todoList[i].isContainer===true)
+    newParents.push(todoList[i]._id);
   }
 
   // if the array is still empty we put the defaultContainer ref for this user in
@@ -137,10 +135,11 @@ var prepareParentsForUpdate = function(req, todo, callback) {
       callback(err, code, null);
       return;
     }
+
     // so at least there are some parents found that belong to the user
     // now check if they are container and if not remove them from the given list
     // in fact we build a new list with the real containers belonging to that user
-    var newParents = copyOnlyValidParentsOrSetDefault(req, todos, todo.parents);
+    var newParents = copyOnlyContainers(req, todos);
 
     // Now replace the requested array with the filtered one
     todo.parents = [];
@@ -223,7 +222,13 @@ router.route('/')
 
 .get(function(req, res, next) {
 
-  var searchId = getContainerIdOrDefault(req);
+  if(isUndefined(req) || isUndefined(req.query) || isUndefined(req.query.containerId)){
+    searchId = req.decoded.defaultContainer;
+  }
+  else{
+    searchId = req.query.containerId;
+  }
+
 
   ToDo.find({
     users: {
@@ -303,7 +308,9 @@ For other updates like transitions or converting into an container use the speci
         });
       }
 
-      // Now after preperation check if we have to update something
+
+      
+     // Now after preperation check if we have to update something
       if (toUpdate.color === preparedTodo.color) {
         if (toUpdate.summary === preparedTodo.summary) {
           if (toUpdate.description === preparedTodo.description) {

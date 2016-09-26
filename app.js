@@ -50,10 +50,12 @@ passport.deserializeUser(User.deserializeUser());
 var routes = require('./routes/index');
 var users = require('./routes/users');
 var todos = require('./routes/todos');
+var containers = require('./routes/containers');
 
 app.use('/', routes);
 app.use('/users', users);
 app.use('/todos', todos);
+app.use('/containers', containers);
 
 
 // serve the files out of ./public as our main files
