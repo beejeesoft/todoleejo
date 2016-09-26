@@ -98,13 +98,8 @@ var getContainerIdOrDefault = function(req) {
 router.route('/')
   .all(Verify.verifyOrdinaryUser)
 
-
-/**
- * Getting all containers for the current user. 
- */
 .get(function(req, res, next) {
 
-  var searchId = getContainerIdOrDefault(req);
 
   ToDo.find({
     users: {
@@ -120,11 +115,15 @@ router.route('/')
         err: err
       });
     }
-
     return res.status(200).json(containers);
 
   });
 })
+
+/**
+ * Getting all containers for the current user. 
+ */
+
 
 /**
  * Changes attributes of an existing container that are manageable by the user.
@@ -263,6 +262,13 @@ router.route('/')
       'message': 'The container to delete is not provided.'
     });
   }
+
+  if (req.body.containerId === req.decoded.defaultContainer) {
+    return res.status(400).json({
+      message: 'Standard container can not be deleted'
+    });
+  }
+
   // start to search for the container
   var query = {
     _id: req.decoded._id,
@@ -298,16 +304,35 @@ router.route('/')
     var query = {
       _id: deletable._id
     };
+
     if (cascadeDelete === true) {
-      query.parents = {
-        $elemMatch: {
-          parentId: deletable._id
-        }
+      query = {
+        $or: [{
+          _id: deletable._id
+        }, {
+          parents: {
+            $elemMatch: {
+              parentId: deletable._id
+            }
+          }
+        }]
       };
     }
 
-    ToDo.dOneAndRemove(query, function(err, allRemoved) {
-      console.log("ERRROR " + JSON.stringify(err));
+
+
+
+    ToDo.remove({
+      $or: [{
+        _id: deletable._id
+      }, {
+        parents: {
+          $elemMatch: {
+            parentId: deletable._id
+          }
+        }
+      }]
+    }, function(err, allRemoved) {
       if (err) return res.status(500).json({
         err: err
       });
