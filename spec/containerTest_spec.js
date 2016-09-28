@@ -108,14 +108,26 @@ var callPutToDo = function(user, todo, callback) {
     }).toss();
 };
 
-var callPutContainer = function(user, container, callback){
+var callDeleteToDo = function(user, todo, expectStatus, callback) {
+  frisby.create('Delete Todo')
+    .addHeaders(getHeader(user))
+    .delete(TODO_URL + '?todoId=' + todo._id)
+    .expectStatus(expectStatus)
+    .afterJSON(function(json) {
+      callback(json);
+    }).toss();
+};
+
+var callPutContainer = function(user, container, callback) {
   frisby.create('PUT Container')
-  .addHeaders(getHeader(user))
-  .put(TEST_URL, container, {json:true})
-  .expectStatus(200)
-  .afterJSON(function(json){
-    callback(json);
-  }).toss();
+    .addHeaders(getHeader(user))
+    .put(TEST_URL, container, {
+      json: true
+    })
+    .expectStatus(200)
+    .afterJSON(function(json) {
+      callback(json);
+    }).toss();
 };
 
 var addToContainer = function(user, todo, container, callback) {
@@ -246,7 +258,7 @@ describe('Container TestSuite put', function() {
       'x-access-token': token
     };
 
-    prepareSetupFor4(user,function(t1,t2,t3,t4,c1,c2,c3,c4){
+    prepareSetupFor4(user, function(t1, t2, t3, t4, c1, c2, c3, c4) {
       // Lets update summary, description, state and parents and colors
       // returned container only reflects summary, descriptoin and colors
 
@@ -256,13 +268,15 @@ describe('Container TestSuite put', function() {
       var expectedColor = 'blue';
       var expectedDescription = 'Container1 description updated';
 
-      c1.color=expectedColor;
-      c1.summary=expectedSummary;
-      c1.state='deleted';
-      c1.parents=[{parentId:c2._id}];
-      c1.description=expectedDescription;
+      c1.color = expectedColor;
+      c1.summary = expectedSummary;
+      c1.state = 'deleted';
+      c1.parents = [{
+        parentId: c2._id
+      }];
+      c1.description = expectedDescription;
 
-      callPutContainer(user, c1, function(updated){
+      callPutContainer(user, c1, function(updated) {
         expect(updated.summary).toBe(expectedSummary);
         expect(updated.description).toBe(expectedDescription);
         expect(updated.color).toBe(expectedColor);
@@ -276,6 +290,8 @@ describe('Container TestSuite put', function() {
   });
 
 });
+
+
 
 describe('Container TestSuite ', function() {
 
@@ -342,6 +358,35 @@ describe('Container TestSuite ', function() {
               expect(findTodoBySummary('Test2', found).parents.length).toBe(2);
               expect(findTodoBySummary('Test3', found).parents.length).toBe(4);
               expect(findTodoBySummary('Test4', found).parents.length).toBe(2);
+
+
+              // Now lets delete some todos to see if it works
+              var user = TEST_USER;
+              callDeleteToDo(user, t1, 200, function(json) {
+                expect(json.state).toBe('deleted');
+
+                checkGetterAndCountTodo(TEST_USER, c1._id, 1, function(found) {
+                  expect(findTodoBySummary('Test3', found).parents.length).toBe(4);
+                });
+                checkGetterAndCountTodo(TEST_USER, c2._id, 2, function(found) {
+                  expect(findTodoBySummary('Test2', found).parents.length).toBe(2);
+                  expect(findTodoBySummary('Test3', found).parents.length).toBe(4);
+                });
+                checkGetterAndCountTodo(TEST_USER, c3._id, 1, function(found) {
+                  expect(findTodoBySummary('Test3', found).parents.length).toBe(4);
+                });
+                checkGetterAndCountTodo(TEST_USER, c4._id, 1, function(found) {
+                  expect(findTodoBySummary('Test4', found).parents.length).toBe(2);
+                });
+                checkGetterAndCountTodo(TEST_USER, null, 3, function(found) {
+                  expect(findTodoBySummary('Test2', found).parents.length).toBe(2);
+                  expect(findTodoBySummary('Test3', found).parents.length).toBe(4);
+                  expect(findTodoBySummary('Test4', found).parents.length).toBe(2);
+
+
+
+                });
+              });
             });
           });
         });
@@ -389,11 +434,7 @@ describe('ContainerTestSuite2', function() {
 
                 frisby.create('Test')
                   .addHeaders(getHeader(user))
-                  .delete(TEST_URL, {
-                    containerId: standard._id
-                  }, {
-                    json: true
-                  })
+                  .delete(TEST_URL + '?containerId=' + standard._id + '&cascade=true')
 
                 .expectStatus(400)
                   .afterJSON(function(json) {
@@ -405,12 +446,7 @@ describe('ContainerTestSuite2', function() {
 
                       frisby.create('Delete Test')
                         .addHeaders(getHeader(user))
-                        .delete(TEST_URL, {
-                          containerId: c1._id,
-                          cascade: true
-                        }, {
-                          json: true
-                        })
+                        .delete(TEST_URL + '?containerId=' + c1._id + '&cascade=true')
                         .expectStatus(200)
                         .afterJSON(function(json) {
 

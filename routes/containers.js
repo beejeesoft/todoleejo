@@ -257,13 +257,13 @@ router.route('/')
  * are deleted.
  */
 .delete(function(req, res, next) {
-  if (isUndefined(req) || isUndefined(req.body) || isUndefined(req.body.containerId)) {
+  if (isUndefined(req) || isUndefined(req.query) || isUndefined(req.query.containerId)) {
     return res.status(400).json({
       'message': 'The container to delete is not provided.'
     });
   }
 
-  if (req.body.containerId === req.decoded.defaultContainer) {
+  if (req.query.containerId === req.decoded.defaultContainer) {
     return res.status(400).json({
       message: 'Standard container can not be deleted'
     });
@@ -272,7 +272,7 @@ router.route('/')
   // start to search for the container
   var query = {
     _id: req.decoded._id,
-    todoIds: [req.body.containerId]
+    todoIds: [req.query.containerId]
   };
   findTodosForCurrentUser(query, function(err, code, containers) {
     if (err) {
@@ -294,7 +294,7 @@ router.route('/')
 
 
     var cascadeDelete = false;
-    if (req.body.cascade === true) {
+    if (req.query.cascade === true) {
       cascadeDelete = true;
     }
 
