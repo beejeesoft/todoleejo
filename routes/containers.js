@@ -24,7 +24,7 @@ var isDefinedBodyContainerId = function(req) {
 
 /*
   Simplify: this method searches for todos that belong to the userId given
-  and are in a set of todoIds. 
+  and are in a set of todoIds.
   With this method we solve the problem that certain requests are only allowed
   on todos that belong to the logged in user (the one that made the request).
   For instance: if one wants to delete a todo we first check if there is todo
@@ -121,7 +121,7 @@ router.route('/')
 })
 
 /**
- * Getting all containers for the current user. 
+ * Getting all containers for the current user.
  */
 
 
@@ -231,6 +231,7 @@ router.route('/')
       }, {
         $set: {
           isContainer: true,
+          isStandard: false,
           parents: []
         }
       }, {
@@ -283,12 +284,19 @@ router.route('/')
 
     var deletable = containers[0];
 
-    // We found a todo with user==logged in user and the given _id. 
+    // We found a todo with user==logged in user and the given _id.
     // so remove it if it is not a container
     if (deletable.isContainer === false) {
       return res.status(400).
       json({
         'messsage': 'ToDos can not be deleted with this endpoint'
+      });
+    }
+
+    if(deletable.isStandard === true){
+      return res.status(400).
+      json({
+        'messsage': 'The Standard Container can not be deleted'
       });
     }
 
@@ -341,7 +349,7 @@ router.route('/')
         allRemoved[i].state = states.STATE.deleted.name;
       }
 
-      // The todo is deleted. The client will get the 
+      // The todo is deleted. The client will get the
       // removed item with a state of deleted
       return res.status(200).json(allRemoved);
     });

@@ -41,6 +41,11 @@ var ToDo = new Schema({
     default: false
   },
 
+  isStandard:{
+    type: Boolean,
+    default: false
+  },
+
   users: [userSchema],
 
   parents: [parentSchema]

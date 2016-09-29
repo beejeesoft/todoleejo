@@ -35,7 +35,8 @@ router.post('/register', function(req, res) {
       ToDo.create({
           'users': [{userId:user._id}],
           'summary': 'Standard',
-          'isContainer': 'true'
+          'isContainer': 'true',
+          'isStandard':'true'
         },
         function(err, todo) {
           if (err) {

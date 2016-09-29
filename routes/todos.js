@@ -371,6 +371,7 @@ Omitting the container id let ToDoLeeJo creating the task in the standard contai
       'summary': req.body.summary,
       'state': states.STATE.open.name,
       'isContainer': false,
+      'isStandard': false,
       'description': req.body.description,
       'color': req.body.color
     },
@@ -394,7 +395,7 @@ Omitting the container id let ToDoLeeJo creating the task in the standard contai
 
 /*
   Deletes an existing todo according the id given in the query of the request.
-  
+
   If the id does not exists or the todo does not belong to the logged in user
   a 404 is thrown. If the id belongs to a container
   a 400 return code is sent. For containers please use the container endpoints
@@ -403,12 +404,9 @@ Omitting the container id let ToDoLeeJo creating the task in the standard contai
 
   Unfortunately angular does not respect the body element for delete requests.
   So I was forced to use query parameters instead.
-  
+
 */
 .delete(function(req, res, next) {
-
-
-  console.log("query: " + JSON.stringify(req.query.todoId));
 
   if (isUndefined(req) || isUndefined(req.query) || isUndefined(req.query.todoId)) {
     return res.status(400).json({
