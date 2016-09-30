@@ -18,7 +18,7 @@ var isUndefined = function(toCheck) {
 var isDefinedBodyContainerId = function(req) {
   return (isUndefined(req) === false &&
     isUndefined(req.body) === false &&
-    isUndefined(req.body.containerId === false));
+    isUndefined(req.body.containerId) === false);
 };
 
 /*

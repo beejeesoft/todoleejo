@@ -124,13 +124,13 @@ describe('ToDo TestSuite ', function() {
 
 
                   frisby.create('Delete with a non existing objectId')
-                    .delete(CREATE_URL+'/?todoId=57e4377989248e1cc98986f0')
+                    .delete(CREATE_URL + '/?todoId=57e4377989248e1cc98986f0')
                     .expectStatus(404)
                     .after(function() {
 
 
                       frisby.create('Delete the todo')
-                        .delete(CREATE_URL+'/?todoId='+todo._id)
+                        .delete(CREATE_URL + '/?todoId=' + todo._id)
                         .expectStatus(200)
                         .afterJSON(function(tododeleted) {
                           expect(tododeleted).not.toBe(null);

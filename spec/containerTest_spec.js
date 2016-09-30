@@ -42,13 +42,23 @@ var createManyToDos = function(user, arrayOfSummaries, callback) {
   }
 };
 
+
 var createToDo = function(user, summary, callback) {
+  createToDoWithContainer(user, summary, null, callback);
+};
+
+var createToDoWithContainer = function(user, summary, containerId, callback) {
+
+  var query = {
+    'summary': summary
+  };
+  if (containerId !== null) {
+    query.containerId = containerId;
+  }
 
   frisby.create('Prepare')
     .addHeaders(getHeader(user))
-    .post(TODO_URL, {
-      'summary': summary
-    }, {
+    .post(TODO_URL, query, {
       json: true
     })
     .expectStatus(200)
@@ -384,7 +394,13 @@ describe('Container TestSuite ', function() {
                   expect(findTodoBySummary('Test4', found).parents.length).toBe(2);
 
 
-
+                  // Lets create some new todos in non default container
+                  createToDoWithContainer(TEST_USER, 'TODO IN C3', c3._id, function(response) {
+                    checkGetterAndCountTodo(TEST_USER, c3._id, 2, function(found) {
+                      expect(findTodoBySummary('Test3', found).parents.length).toBe(4);
+                      expect(findTodoBySummary('TODO IN C3', found).parents.length).toBe(1);
+                    });
+                  });
                 });
               });
             });
